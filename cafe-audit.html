@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Café Performance Audit</title>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Café Audit"/>
+<meta name="theme-color" content="#2a4ccc"/>
+<link rel="apple-touch-icon" href="icon-audit.png"/>
+<link rel="manifest" href="manifest-audit.json"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #f5f5f3;
+    --white: #ffffff;
+    --ink: #1a1a1a;
+    --mid: #555550;
+    --light: #999990;
+    --border: #d8d8d4;
+    --border-dark: #b0b0aa;
+    --self-col: #f0f4ff;
+    --ops-col: #f0fff4;
+    --self-rated: #2a4ccc;
+    --ops-rated: #1a7a42;
+    --flag: #c0392b;
+    --flag-bg: #fef2f2;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+
+  .page {
+    max-width: 800px;
+    margin: 0 auto;
+    background: var(--white);
+    min-height: 100vh;
+    padding: 44px 52px 56px;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+
+  .page-break {
+    max-width: 800px;
+    margin: 0 auto;
+    background: var(--bg);
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    padding: 20px 52px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-top: 1px dashed var(--border-dark);
+    border-bottom: 1px dashed var(--border-dark);
+  }
+
+  .page-break span {
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--light);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .pb-line { flex: 1; height: 1px; background: var(--border); }
+
+  .form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .header-left h1 {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 22px;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    margin-bottom: 3px;
+  }
+
+  .header-left .eyebrow {
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--light);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .header-right { text-align: right; }
+
+  .header-right .score-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--light);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .score-pair { display: flex; gap: 8px; justify-content: flex-end; }
+
+  .score-pill {
+    padding: 5px 14px;
+    border-radius: 3px;
+    font-family: 'Libre Baskerville', serif;
+    font-size: 18px;
+    min-width: 72px;
+    text-align: center;
+  }
+
+  .score-pill.self { background: var(--self-col); color: var(--self-rated); border: 1px solid #c0ccee; }
+  .score-pill.ops  { background: var(--ops-col);  color: var(--ops-rated);  border: 1px solid #a8d8b8; }
+  .score-pill small { font-size: 10px; font-family: 'DM Sans', sans-serif; opacity: 0.6; }
+
+  .pill-labels { display: flex; gap: 8px; justify-content: flex-end; margin-top: 3px; }
+
+  .pill-label {
+    font-size: 9.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 600;
+    min-width: 72px;
+    text-align: center;
+  }
+
+  .pill-label.self { color: var(--self-rated); }
+  .pill-label.ops  { color: var(--ops-rated); }
+
+  .meta-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .meta-field label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--light);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .meta-field input, .meta-field select {
+    width: 100%;
+    border: none;
+    border-bottom: 1.5px solid var(--border-dark);
+    background: transparent;
+    padding: 4px 0;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .meta-field input:focus, .meta-field select:focus { border-bottom-color: var(--ink); }
+
+  .instructions {
+    border: 1px solid var(--border-dark);
+    border-radius: 3px;
+    padding: 12px 16px;
+    margin-bottom: 28px;
+    background: #fafafa;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 24px;
+  }
+
+  .instructions p { font-size: 11.5px; color: var(--mid); line-height: 1.65; }
+  .instructions strong { color: var(--ink); }
+
+  .col-key {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    grid-column: 1 / -1;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    margin-top: 2px;
+    flex-wrap: wrap;
+  }
+
+  .col-key-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--mid);
+  }
+
+  .col-swatch { width: 28px; height: 14px; border-radius: 2px; }
+  .col-swatch.self { background: var(--self-col); border: 1px solid #c0ccee; }
+  .col-swatch.ops  { background: var(--ops-col);  border: 1px solid #a8d8b8; }
+
+  .scale-note { font-size: 10.5px; color: var(--light); margin-left: auto; }
+
+  .section { margin-bottom: 28px; }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .section-title {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 13.5px;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .section-num {
+    width: 20px;
+    height: 20px;
+    background: var(--ink);
+    color: white;
+    font-size: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .section-scores { display: flex; gap: 8px; align-items: center; font-size: 11px; }
+
+  .section-scores .s-val {
+    padding: 2px 10px;
+    border-radius: 2px;
+    font-weight: 600;
+    font-size: 12px;
+  }
+
+  .section-scores .s-val.self { background: var(--self-col); color: var(--self-rated); }
+  .section-scores .s-val.ops  { background: var(--ops-col);  color: var(--ops-rated);  }
+  .section-scores .s-label { color: var(--light); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; }
+
+  .criteria-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+
+  .criteria-table thead th {
+    padding: 7px 10px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--light);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .criteria-table thead th:first-child { text-align: left; background: #fafafa; }
+  .criteria-table thead th.self-head { background: var(--self-col); color: var(--self-rated); width: 130px; text-align: center; }
+  .criteria-table thead th.ops-head  { background: var(--ops-col);  color: var(--ops-rated);  width: 130px; text-align: center; }
+
+  .criteria-table tbody tr { border-bottom: 1px solid var(--border); }
+  .criteria-table tbody tr:last-child { border-bottom: none; }
+
+  .criteria-table td { padding: 10px; vertical-align: middle; }
+  .criteria-table td:first-child { background: white; }
+  .criteria-table td.self-cell { background: var(--self-col); text-align: center; }
+  .criteria-table td.ops-cell  { background: var(--ops-col);  text-align: center; }
+
+  .criteria-label { font-size: 13px; font-weight: 500; color: var(--ink); margin-bottom: 1px; }
+  .criteria-hint  { font-size: 11px; color: var(--light); }
+
+  .rating-scale { display: flex; gap: 3px; justify-content: center; }
+  .rating-scale input[type="radio"] { display: none; }
+
+  .rating-scale label {
+    width: 24px;
+    height: 24px;
+    border: 1.5px solid var(--border-dark);
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--light);
+    transition: all 0.12s;
+    user-select: none;
+    background: white;
+  }
+
+  .rating-scale.self-scale input[type="radio"]:checked + label {
+    background: var(--self-rated);
+    border-color: var(--self-rated);
+    color: white;
+  }
+
+  .rating-scale.ops-scale input[type="radio"]:checked + label {
+    background: var(--ops-rated);
+    border-color: var(--ops-rated);
+    color: white;
+  }
+
+  .rating-scale label:hover { border-color: var(--ink); color: var(--ink); }
+
+  .notes-block { margin-top: 4px; }
+
+  .notes-block label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--light);
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+
+  .notes-block textarea {
+    width: 100%;
+    border: 1px solid var(--border-dark);
+    border-radius: 3px;
+    background: #fafafa;
+    padding: 8px 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12.5px;
+    color: var(--ink);
+    outline: none;
+    resize: vertical;
+    min-height: 48px;
+    line-height: 1.6;
+    transition: border-color 0.15s;
+  }
+
+  .notes-block textarea:focus { border-color: var(--ink); background: white; }
+
+  .divider { height: 1px; background: var(--border); margin: 28px 0; }
+
+  .score-summary {
+    border: 1.5px solid var(--ink);
+    border-radius: 3px;
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+
+  .ss-header {
+    background: var(--ink);
+    color: white;
+    padding: 10px 18px;
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .ss-header .col-heads { display: flex; gap: 8px; font-size: 9.5px; }
+  .ss-header .col-heads span { min-width: 72px; text-align: center; opacity: 0.6; letter-spacing: 0.1em; }
+
+  .ss-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .ss-row:last-of-type { border-bottom: none; }
+  .ss-row-label { font-size: 13px; color: var(--mid); }
+  .ss-vals { display: flex; gap: 8px; }
+
+  .ss-val {
+    min-width: 72px;
+    text-align: center;
+    font-family: 'Libre Baskerville', serif;
+    font-size: 15px;
+    padding: 4px 0;
+    border-radius: 2px;
+  }
+
+  .ss-val.self { background: var(--self-col); color: var(--self-rated); }
+  .ss-val.ops  { background: var(--ops-col);  color: var(--ops-rated);  }
+
+  .ss-total {
+    background: #f5f5f5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    border-top: 2px solid var(--ink);
+  }
+
+  .ss-total-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; color: var(--ink); }
+  .ss-total-vals { display: flex; gap: 8px; }
+
+  .ss-total-val {
+    min-width: 72px;
+    text-align: center;
+    font-family: 'Libre Baskerville', serif;
+    font-size: 22px;
+    padding: 4px 8px;
+    border-radius: 2px;
+  }
+
+  .ss-total-val.self { background: var(--self-col); color: var(--self-rated); }
+  .ss-total-val.ops  { background: var(--ops-col);  color: var(--ops-rated);  }
+  .ss-total-val small { font-family: 'DM Sans', sans-serif; font-size: 11px; opacity: 0.5; }
+
+  .band-wrap { padding: 10px 18px 14px; border-top: 1px solid var(--border); }
+  .band-track { display: flex; gap: 4px; margin-bottom: 5px; }
+
+  .band-seg {
+    flex: 1;
+    height: 6px;
+    border-radius: 2px;
+    opacity: 0.18;
+    transition: opacity 0.3s;
+  }
+
+  .band-seg.lit { opacity: 1; }
+  .b1 { background: #c0392b; }
+  .b2 { background: #e67e22; }
+  .b3 { background: #f1c40f; }
+  .b4 { background: #2ecc71; }
+  .b5 { background: #27ae60; }
+  .band-text { display: flex; justify-content: space-between; font-size: 9.5px; color: var(--light); letter-spacing: 0.04em; }
+
+  .action-section { margin-bottom: 28px; }
+
+  .action-section h3 {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 13.5px;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 14px;
+  }
+
+  .action-block {
+    border: 1px solid var(--border-dark);
+    border-radius: 3px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+
+  .action-block-header {
+    background: #f5f5f5;
+    border-bottom: 1px solid var(--border);
+    padding: 7px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .action-block-header label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--mid);
+  }
+
+  .action-tag {
+    font-size: 9.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 2px;
+  }
+
+  .tag-team     { background: rgba(26,26,26,0.08); color: var(--ink); }
+  .tag-personal { background: rgba(26,76,204,0.08); color: var(--self-rated); }
+  .tag-ops      { background: rgba(26,122,66,0.08); color: var(--ops-rated); }
+
+  .action-block textarea {
+    width: 100%;
+    border: none;
+    background: white;
+    padding: 10px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12.5px;
+    color: var(--ink);
+    outline: none;
+    resize: vertical;
+    min-height: 52px;
+    line-height: 1.6;
+  }
+
+  .ack {
+    border: 1px solid var(--border-dark);
+    border-radius: 3px;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+  }
+
+  .ack p { font-size: 11.5px; color: var(--mid); margin-bottom: 16px; line-height: 1.7; }
+
+  .sig-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+
+  .sig-field label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--light);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .sig-line { border-bottom: 1.5px solid var(--ink); height: 28px; }
+
+  .form-footer {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+    margin-top: 28px;
+  }
+
+  .form-footer span { font-size: 10px; color: var(--light); letter-spacing: 0.06em; }
+
+  @media print {
+    .page-break { page-break-after: always; }
+    body { background: white; }
+    .page { border: none; padding: 32px 40px; }
+    .print-btn-bar { display: none !important; }
+  }
+</style>
+</head>
+<body>
+<div id="pwa-banner" style="display:none;background:#2a4ccc;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;padding:12px 16px;text-align:center;line-height:1.5;">
+  <strong>Add to iPhone home screen:</strong> tap the Share icon <span style="font-size:15px">⎋</span> → <em>Add to Home Screen</em> → <em>Add</em>
+  <button onclick="document.getElementById('pwa-banner').style.display='none'" style="margin-left:12px;background:rgba(255,255,255,0.25);border:none;color:#fff;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:12px;">✕</button>
+</div>
+<script>
+  // Show banner only in Safari on iOS, not when already installed as PWA
+  if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone) {
+    document.getElementById('pwa-banner').style.display = 'block';
+  }
+</script>
+
+<div class="print-btn-bar" style="
+  position: fixed; bottom: 28px; right: 28px; z-index: 1000;
+  display: flex; gap: 0;
+">
+  <button onclick="window.print()" style="
+    display: flex; align-items: center; gap: 8px;
+    background: #1a1a1a; color: white;
+    border: none; border-radius: 4px;
+    padding: 11px 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; letter-spacing: 0.03em;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+    transition: background 0.15s;
+  " onmouseover="this.style.background='#333'" onmouseout="this.style.background='#1a1a1a'">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    Print / Save as PDF
+  </button>
+</div>
+
+<!-- PAGE 1 -->
+<div class="page">
+
+  <div class="form-header">
+    <div class="header-left">
+      <div class="eyebrow">Café Operations</div>
+      <h1>Shop Performance Audit</h1>
+    </div>
+    <div class="header-right">
+      <div class="score-label">Total Score</div>
+      <div class="score-pair">
+        <div class="score-pill self" id="hdr-self">— <small>/100</small></div>
+        <div class="score-pill ops"  id="hdr-ops">— <small>/100</small></div>
+      </div>
+      <div class="pill-labels">
+        <div class="pill-label self">Self</div>
+        <div class="pill-label ops">Ops Review</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="meta-row">
+    <div class="meta-field">
+      <label>Location</label>
+      <select>
+        <option value="">Select…</option>
+        <option>Fable</option>
+        <option>Seasmith</option>
+        <option>Burien Press</option>
+        <option>Moonshot Coffee</option>
+        <option>Production Kitchen</option>
+      </select>
+    </div>
+    <div class="meta-field">
+      <label>Audit Date</label>
+      <input type="date"/>
+    </div>
+    <div class="meta-field">
+      <label>Review Period</label>
+      <select>
+        <option>Bi-Weekly Check-In</option>
+        <option>Monthly Review</option>
+        <option>Spot Audit</option>
+      </select>
+    </div>
+    <div class="meta-field">
+      <label>Coordinator (Self-Assessment)</label>
+      <input type="text" placeholder="Full name"/>
+    </div>
+    <div class="meta-field">
+      <label>Operations Reviewer</label>
+      <input type="text" placeholder="Full name"/>
+    </div>
+    <div class="meta-field">
+      <label>Team Members on Duty</label>
+      <input type="text" placeholder="Names or headcount"/>
+    </div>
+  </div>
+
+  <div class="instructions">
+    <p><strong>Coordinator:</strong> Complete the Self column prior to the operations visit. Rate each criterion based on current shop conditions and team practices during this period.</p>
+    <p><strong>Ops Reviewer:</strong> Complete the Review column independently. Where scores differ by 2 or more points, document specifics in the observations field for discussion.</p>
+    <div class="col-key">
+      <div class="col-key-item"><div class="col-swatch self"></div> Coordinator Self-Assessment</div>
+      <div class="col-key-item"><div class="col-swatch ops"></div> Operations Review</div>
+      <span class="scale-note">1 = Does not meet standard &nbsp;·&nbsp; 3 = Meets standard &nbsp;·&nbsp; 5 = Consistently exceeds standard</span>
+    </div>
+  </div>
+
+  <!-- SECTION 1 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title"><div class="section-num">1</div> Cleanliness &amp; Sanitation</div>
+      <div class="section-scores">
+        <span class="s-label">Section</span>
+        <span class="s-val self" id="s1-self">—/25</span>
+        <span class="s-val ops"  id="s1-ops">—/25</span>
+      </div>
+    </div>
+    <table class="criteria-table">
+      <thead><tr><th>Criterion</th><th class="self-head">Self</th><th class="ops-head">Ops Review</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><div class="criteria-label">Bar &amp; Surface Cleanliness</div><div class="criteria-hint">Espresso bar, counters, drip trays, steam wand</div></td>
+          <td class="self-cell"><div class="rating-scale self-scale"><input type="radio" name="c1s" id="c1s1" value="1"><label for="c1s1">1</label><input type="radio" name="c1s" id="c1s2" value="2"><label for="c1s2">2</label><input type="radio" name="c1s" id="c1s3" value="3"><label for="c1s3">3</label><input type="radio" name="c1s" id="c1s4" value="4"><label for="c1s4">4</label><input type="radio" name="c1s" id="c1s5" value="5"><label for="c1s5">5</label></div></td>
+          <td class="ops-cell"><div class="rating-scale ops-scale"><input type="radio" name="c1o" id="c1o1" value="1"><label for="c1o1">1</label><input type="radio" name="c1o" id="c1o2" value="2"><label for="c1o2">2</label><input type="radio" name="c1o" id="c1o3" value="3"><label for="c1o3">3</label><input type="radio" name="c1o" id="c1o4" value="4"><label for="c1o4">4</label><input type="radio" name="c1o" id="c1o5" value="5"><label for="c1o5">5</label></div></td>
+        </tr>
+        <tr>
+          <td><div class="criteria-label">Floor, Furniture &amp; Guest Areas</div><div class="criteria-hint">Floors swept/mopped, tables wiped, seating area maintained; bus + rubbish bins not overflowing</div></td>
+          <td class="self-cell"><div class="rating-scale self-scale"><input type="radio" name="c2s" id="c2s1" value="1"><label for="c2s1">1</label><input type="radio" name="c2s" id="c2s2" value="2"><label for="c2s2">2</label><input type="radio" name="c2s" id="c2s3" value="3"><label for="c2s3">3</label><input type="radio" name="c2s" id="c2s4" value="4"><label for="c2s4">4</label><input type="radio" name="c2s" id="c2s5" value="5"><label for="c2s5">5</label></div></td>
+          <td class="ops-cell"><div class="rating-scale ops-scale"><input type="radio" name="c2o" id="c2o1" value="1"><label for="c2o1">1</label><input type="radio" name="c2o" id="c2o2" value="2"><label for="c2o2">2</label><input type="radio" name="c2o" id="c2o3" value="3"><label for="c2o3">3</label><input type="radio" name="c2o" id="c2o4" value="4"><label for="c2o4">4</label><input type="radio" name="c2o" id="c2o5" value="5"><label for="c2o5">5</label></div></td>
+        </tr>
+        <tr>
+          <td><div class="criteria-label">Back-of-House &amp; Storage Areas</div><div class="criteria-hint">Sink area, shelving, storage zones, waste bins</div></td>
+          <td class="self-cell"><div class="rating-scale self-scale"><input type="radio" name="c3s" id="c3s1" value="1"><label for="c3s1">1</label><input type="radio" name="c3s" id="c3s2" value="2"><label for="c3s2">2</label><input type="radio" name="c3s" id="c3s3" value="3"><label for="c3s3">3</label><input type="radio" name="c3s" id="c3s4" value="4"><label for="c3s4">4</label><input type="radio" name="c3s" id="c3s5" value="5"><label for="c3s5">5</label></div></td>
+          <td class="ops-cell"><div class="rating-scale ops-scale"><input type="radio" name="c3o" id="c3o1" value="1"><label for="c3o1">1</label><input type="radio" name="c3o" id="c3o2" value="2"><label for="c3o2">2</label><input type="radio" name="c3o" id="c3o3" value="3"><label for="c3o3">3</label><input type="radio" name="c3o" id="c3o4" value="4"><label for="c3o4">4</label><input type="radio" name="c3o" id="c3o5" value="5"><label for="c3o5">5</label></div></td>
+        </tr>
+        <tr>
+          <td><div class="criteria-label">Food Safety &amp; Hygiene Compliance</div><div class="criteria-hint">Date labels, temperature logs current</div></td>
+          <td class="self-cell"><div class="rating-scale self-scale"><input type="radio" name="c4s" id="c4s1" value="1"><label for="c4s1">1</label><input type="radio" name="c4s" id="c4s2" value="2"><label for="c4s2">2</label><input type="radio" name="c4s" id="c4s3" value="3"><label for="c4s3">3</label><input type="radio" name="c4s" id="c4s4" value="4"><label for="c4s4">4</label><input type="radio" name="c4s" id="c4s5" value="5"><label for="c4s5">5</label></div></td>
+          <td class="ops-cell"><div class="rating-scale ops-scale"><input type="radio" name="c4o" id="c4o1" value="1"><label for="c4o1">1</label><input type="radio" name="c4o" id="c4o2" value="2"><label for="c4o2">2</label><input type="radio" name="c4o" id="c4o3" value="3"><label for="c4o3">3</label><input type="radio" name="c4o" id="c4o4" value="4"><label for="c4o4">4</label><input type="radio" name="c4o" id="c4o5" value="5"><label for="c4o5">5</label></div></td>
+        </tr>
+        <tr>
+          <td><div class="criteria-label">Equipment Cleanliness</div><div class="criteria-hint">Grinders, brewers, blenders, refrigerators, display cases</div></td>
+          <td class="self-cell"><div class="rating-scale self-scale"><input type="radio" name="c5s" id="c5s1" value="1"><label for="c5s1">1</label><input type="radio" name="c5s" id="c5s2" value="2"><label for="c5s2">2</label><input type="radio" name="c5s" id="c5s3" value="3"><label for="c5s3">3</label><input type="radio" name="c5s" id="c5s4" value="4"><label for="c5s4">4</label><input type="radio" name="c5s" id="c5s5" value="5"><label for="c5s5">5</label></div></td>
+          <td class="ops-cell"><div class="rating-scale ops-scale"><input type="radio" name="c5o" id="c5o1" value="1"><label for="c5o1">1</label><input type="radio" name="c5o" id="c5o2" value="2"><label for="c5o2">2</label><input type="radio" name="c5o" id="c5o3" value="3"><label for="c5o3">3</label><input type="radio" name="c5o" id="c5o4" value="4"><label for="c5o4">4</label><input type="radio" name="c5o" id="c5o5" value="5"><label for="c5o5">5</label></div></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="notes-block">
+      <label>Observations &amp; Discrepancy Notes — Cleanliness</label>
+      <textarea placeholder="Document specific observations. Note any criteria where self and review scores differ by 2+ points."></textarea>
+    </div>
+  </div>
+
+  <!-- SECTION 2 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title"><div class="section-num">2</div> Organization &amp; Structure</div>
+      <div class="section-scores">
+        <span class="s-label">Section</span>
+        <span class="s-val self" id="s2-self">—/25</span>
+        <span class="s-val ops"  id="s2-ops">—/25</span>
+      </div>
+    </div>
+    <table class="criteria-table">
+      <thead><tr><th>Criterion</th><th class="self-head">Self</th><th class="ops-head">Ops Review</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><div class="criteria-label">Station Layout &amp; Flow</div><div class="criteria-hint">Bar organized for logical, efficient movement; tools in designated positions</div></td>
+          <td class="self-cell"><div class="rating-scale self-scale"><input type="radio" name="c6s" id="c6s1" value="1"><label for="c6s1">1</label><input type="radio" name="c6s" id="c6s2" value="2"><label for="c6s2">2</label><input type="radio" name="c6s" id="c6s3" value="3"><label for="c6s3">3</label><input type="radio" name="c6s" id="c6s4" value="4"><label for="c6s4">4</label><input type="radio" name="c6s" id="c6s5" value="5"><label for="c6s5">5</label></div></td>
+          <td class="ops-cell"><div class="rating-scale ops-scale"><input type="radio" name="c6o" id="c6o1" value="1"><label for="c6o1">1</label><input type="radio" name="c6o" id="c6o2" value="2"><label for="c6o2">2</label><input type="radio" name="c6o" id="c6o3" value="3"><label for="c6o3">3</label><input type="radio" name="c6o" id="c6o4" value="4"><label for="c6o4">4</label><input type="radio" name="c6o" id="c6o5" value="5"><label for="c6o5">5</label></div></td>
+        </tr>
+        <tr>
+          <td><div class="criteria-label">Mise en Place</div><div class="criteria-hint">All tools, ingredients, and supplies in position prior to service</div></td>
+          <td class="self-cell"><div class="rating-scale self-scale"><input type="radio" name="c7s" id="c7s1" value="1"><label for="c7s1">1</label><input type="radio" name="c7s" id="c7s2" value="2"><label for="c7s2">2</label><input type="radio" name="c7s" id="c7s3" value="3"><label for="c7s3">3</label><input type="radio" name="c7s" id="c7s4" value="4"><label for="c7s4">4</label><input type="radio" name="c7s" id="c7s5" value="5"><label for="c7s5">5</label></div></td>
+          <td class="ops-cell"><div class="rating-scale ops-scale"><input type="radio" name="c7o" id="c7o1" value="1"><label for="c7o1">1</label><input type="radio" name="c7o" id="c7o2" value="2"><label for="c7o2">2</label><input type="radio" name="c7o" id="c7o3" value="3"><label for="c7o3">3</label><input type="radio" name="c7o" id="c7o4" value="4"><label for="c7o4">4</label><input type="radio" name="c7o" id="c7o5" value="5"><label for="c7o5">5</label></div></td>
+        </tr>
+        <tr>
+          <td><div class="criteria-label">Inventory &amp; Stock Management</div><div class="criteria-hint">FIFO rotation, accurate labeling, appropriate par levels maintained</div></td>
+          <td class="self-cell"><div class="rating-scale self-scale"><input type="radio" name="c8s" id="c8s1" value="1"><label for="c8s1">1</label><input type="radio" name="c8s" id="c8s2" value="2"><label for="c8s2">2</label><input type="radio" name="c8s" id="c8s3" value="3"><label for="c8s3">3</label><input type="radio" name="c8s" id="c8s4" value="4"><label for="c8s4">4</label><input type="radio" name="c8s" id="c8s5" value="5"><label for="c8s5">5</label></div></td>
+          <td class="ops-cell"><div class="rating-scale ops-scale"><input type="radio" name="c8o" id="c8o1" value="1"><label for="c8o1">1</label><input type="radio" name="c8o" id="c8o2" value="2"><label for="c8o2">2</label><input type="radio" name="c8o" id="c8o3" value="3"><label for="c8o3">3</label><input type="radio" name="c8o" id="c8o4" value="4"><label for="c8o4">4</label><input type="radio" name="c8o" id="c8o5" value="5"><label for="c8o5">5</label></div></td>
+        </tr>
+        <tr>
+          <td><div class="criteria-label">Documentation &amp; Checklists</div><div class="criteria-hint">Opening/closing lists completed accurately and on time</div></td>
+          <td class="self-cell"><div class="rating-scale self-scale"><input type="radio" name="c10s" id="c10s1" value="1"><label for="c10s1">1</label><input type="radio" name="c10s" id="c10s2" value="2"><label for="c10s2">2</label><input type="radio" name="c10s" id="c10s3" value="3"><label for="c10s3">3</label><input type="radio" name="c10s" id="c10s4" value="4"><label for="c10s4">4</label><input type="radio" name="c10s" id="c10s5" value="5"><label for="c10s5">5</label></div></td>
+          <td class="ops-cell"><div class="rating-scale ops-scale"><input type="radio" name="c10o" id="c10o1" value="1"><label for="c10o1">1</label><input type="radio" name="c10o" id="c10o2" value="2"><label for="c10o2">2</label><input type="radio" name="c10o" id="c10o3" value="3"><label for="c10o3">3</label><input type="radio" name="c10o" id="c10o4" value="4"><label for="c10o4">4</label><input type="radio" name="c10o" id="c10o5" value="5"><label for="c10o5">5</label></div></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="notes-block">
+      <label>Observations &amp; Discrepancy Notes — Organization</label>
+      <textarea placeholder="Document specific observations. Note any criteria where self and review scores differ by 2+ points."></textarea>
+    </div>
+  </div>
+
+</div>
+
+<!-- PAGE BREAK -->
+<div class="page-break">
+  <div class="pb-line"></div>
+  <span>Page 2 of 2</span>
+  <div class="pb-line"></div>
+</div>
+
+<!-- PAGE 2 -->
+<div class="page">
+
+  <!-- SECTION 3 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title"><div class="section-num">3</div> Daily Practices &amp; Standards</div>
+      <div class="section-scores">
+        <span class="s-label">Section</span>
+        <span class="s-val self" id="s3-self">—/25</span>
+        <span class="s-val ops"  id="s3-ops">—/25</span>
+      </div>
+    </div>
+    <table class="criteria-table">
+      <thead><tr><th>Criterion</th><th class="self-head">Self</th><th class="ops-head">Ops Review</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><div class="criteria-label">Back-to-Zero Practice</div><div class="criteria-hint">Station reset between rushes; no accumulation of mess during service</div></td>
+          <td class="self-cell"><div class="rating-scale self-scale"><input type="radio" name="c11s" id="c11s1" value="1"><label for="c11s1">1</label><input type="radio" name="c11s" id="c11s2" value="2"><label for="c11s2">2</label><input type="radio" name="c11s" id="c11s3" value="3"><label for="c11s3">3</label><input type="radio" name="c11s" id="c11s4" value="4"><label for="c11s4">4</label><input type="radio" name="c11s" id="c11s5" value="5"><label for="c11s5">5</label></div></td>
+          <td class="ops-cell"><div class="rating-scale ops-scale"><input type="radio" name="c11o" id="c11o1" value="1"><label for="c11o1">1</label><input type="radio" name="c11o" id="c11o2" value="2"><label for="c11o2">2</label><input type="radio" name="c11o" id="c11o3" value="3"><label for="c11o3">3</label><input type="radio" name="c11o" id="c11o4" value="4"><label for="c11o4">4</label><input type="radio" name="c11o" id="c11o5" value="5"><label for="c11o5">5</label></div></td>
+        </tr>
+        <tr>
+          <td><div class="criteria-label">Guest Experience &amp; Service Standards</div><div class="criteria-hint">Greetings, attentiveness, order accuracy, complaint handling</div></td>
+          <td class="self-cell"><div class="rating-scale self-scale"><input type="radio" name="c14s" id="c14s1" value="1"><label for="c14s1">1</label><input type="radio" name="c14s" id="c14s2" value="2"><label for="c14s2">2</label><input type="radio" name="c14s" id="c14s3" value="3"><label for="c14s3">3</label><input type="radio" name="c14s" id="c14s4" value="4"><label for="c14s4">4</label><input type="radio" name="c14s" id="c14s5" value="5"><label for="c14s5">5</label></div></td>
+          <td class="ops-cell"><div class="rating-scale ops-scale"><input type="radio" name="c14o" id="c14o1" value="1"><label for="c14o1">1</label><input type="radio" name="c14o" id="c14o2" value="2"><label for="c14o2">2</label><input type="radio" name="c14o" id="c14o3" value="3"><label for="c14o3">3</label><input type="radio" name="c14o" id="c14o4" value="4"><label for="c14o4">4</label><input type="radio" name="c14o" id="c14o5" value="5"><label for="c14o5">5</label></div></td>
+        </tr>
+        <tr>
+          <td><div class="criteria-label">Waste Reduction &amp; Mindful Use</div><div class="criteria-hint">Appropriate portioning; avoiding over-prep and unnecessary product loss</div></td>
+          <td class="self-cell"><div class="rating-scale self-scale"><input type="radio" name="c15s" id="c15s1" value="1"><label for="c15s1">1</label><input type="radio" name="c15s" id="c15s2" value="2"><label for="c15s2">2</label><input type="radio" name="c15s" id="c15s3" value="3"><label for="c15s3">3</label><input type="radio" name="c15s" id="c15s4" value="4"><label for="c15s4">4</label><input type="radio" name="c15s" id="c15s5" value="5"><label for="c15s5">5</label></div></td>
+          <td class="ops-cell"><div class="rating-scale ops-scale"><input type="radio" name="c15o" id="c15o1" value="1"><label for="c15o1">1</label><input type="radio" name="c15o" id="c15o2" value="2"><label for="c15o2">2</label><input type="radio" name="c15o" id="c15o3" value="3"><label for="c15o3">3</label><input type="radio" name="c15o" id="c15o4" value="4"><label for="c15o4">4</label><input type="radio" name="c15o" id="c15o5" value="5"><label for="c15o5">5</label></div></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="notes-block">
+      <label>Observations &amp; Discrepancy Notes — Daily Practices</label>
+      <textarea placeholder="Document specific observations. Note any criteria where self and review scores differ by 2+ points."></textarea>
+    </div>
+  </div>
+
+  <!-- SECTION 4 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title"><div class="section-num">4</div> Preparedness &amp; Team Readiness</div>
+      <div class="section-scores">
+        <span class="s-label">Section</span>
+        <span class="s-val self" id="s4-self">—/25</span>
+        <span class="s-val ops"  id="s4-ops">—/25</span>
+      </div>
+    </div>
+    <table class="criteria-table">
+      <thead><tr><th>Criterion</th><th class="self-head">Self</th><th class="ops-head">Ops Review</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><div class="criteria-label">Team Knowledge &amp; Menu Confidence</div><div class="criteria-hint">Staff can answer questions, describe products, handle modifications</div></td>
+          <td class="self-cell"><div class="rating-scale self-scale"><input type="radio" name="c17s" id="c17s1" value="1"><label for="c17s1">1</label><input type="radio" name="c17s" id="c17s2" value="2"><label for="c17s2">2</label><input type="radio" name="c17s" id="c17s3" value="3"><label for="c17s3">3</label><input type="radio" name="c17s" id="c17s4" value="4"><label for="c17s4">4</label><input type="radio" name="c17s" id="c17s5" value="5"><label for="c17s5">5</label></div></td>
+          <td class="ops-cell"><div class="rating-scale ops-scale"><input type="radio" name="c17o" id="c17o1" value="1"><label for="c17o1">1</label><input type="radio" name="c17o" id="c17o2" value="2"><label for="c17o2">2</label><input type="radio" name="c17o" id="c17o3" value="3"><label for="c17o3">3</label><input type="radio" name="c17o" id="c17o4" value="4"><label for="c17o4">4</label><input type="radio" name="c17o" id="c17o5" value="5"><label for="c17o5">5</label></div></td>
+        </tr>
+        <tr>
+          <td><div class="criteria-label">Team Communication &amp; Coordination</div><div class="criteria-hint">Orders called out clearly; tasks handed off effectively; roles understood</div></td>
+          <td class="self-cell"><div class="rating-scale self-scale"><input type="radio" name="c18s" id="c18s1" value="1"><label for="c18s1">1</label><input type="radio" name="c18s" id="c18s2" value="2"><label for="c18s2">2</label><input type="radio" name="c18s" id="c18s3" value="3"><label for="c18s3">3</label><input type="radio" name="c18s" id="c18s4" value="4"><label for="c18s4">4</label><input type="radio" name="c18s" id="c18s5" value="5"><label for="c18s5">5</label></div></td>
+          <td class="ops-cell"><div class="rating-scale ops-scale"><input type="radio" name="c18o" id="c18o1" value="1"><label for="c18o1">1</label><input type="radio" name="c18o" id="c18o2" value="2"><label for="c18o2">2</label><input type="radio" name="c18o" id="c18o3" value="3"><label for="c18o3">3</label><input type="radio" name="c18o" id="c18o4" value="4"><label for="c18o4">4</label><input type="radio" name="c18o" id="c18o5" value="5"><label for="c18o5">5</label></div></td>
+        </tr>
+        <tr>
+          <td><div class="criteria-label">Problem Solving &amp; Adaptability</div><div class="criteria-hint">Equipment issues, shortages, and demand fluctuations handled without disruption</div></td>
+          <td class="self-cell"><div class="rating-scale self-scale"><input type="radio" name="c19s" id="c19s1" value="1"><label for="c19s1">1</label><input type="radio" name="c19s" id="c19s2" value="2"><label for="c19s2">2</label><input type="radio" name="c19s" id="c19s3" value="3"><label for="c19s3">3</label><input type="radio" name="c19s" id="c19s4" value="4"><label for="c19s4">4</label><input type="radio" name="c19s" id="c19s5" value="5"><label for="c19s5">5</label></div></td>
+          <td class="ops-cell"><div class="rating-scale ops-scale"><input type="radio" name="c19o" id="c19o1" value="1"><label for="c19o1">1</label><input type="radio" name="c19o" id="c19o2" value="2"><label for="c19o2">2</label><input type="radio" name="c19o" id="c19o3" value="3"><label for="c19o3">3</label><input type="radio" name="c19o" id="c19o4" value="4"><label for="c19o4">4</label><input type="radio" name="c19o" id="c19o5" value="5"><label for="c19o5">5</label></div></td>
+        </tr>
+        <tr>
+          <td><div class="criteria-label">Ownership &amp; Initiative</div><div class="criteria-hint">Team proactively identifies and addresses issues without direction</div></td>
+          <td class="self-cell"><div class="rating-scale self-scale"><input type="radio" name="c20s" id="c20s1" value="1"><label for="c20s1">1</label><input type="radio" name="c20s" id="c20s2" value="2"><label for="c20s2">2</label><input type="radio" name="c20s" id="c20s3" value="3"><label for="c20s3">3</label><input type="radio" name="c20s" id="c20s4" value="4"><label for="c20s4">4</label><input type="radio" name="c20s" id="c20s5" value="5"><label for="c20s5">5</label></div></td>
+          <td class="ops-cell"><div class="rating-scale ops-scale"><input type="radio" name="c20o" id="c20o1" value="1"><label for="c20o1">1</label><input type="radio" name="c20o" id="c20o2" value="2"><label for="c20o2">2</label><input type="radio" name="c20o" id="c20o3" value="3"><label for="c20o3">3</label><input type="radio" name="c20o" id="c20o4" value="4"><label for="c20o4">4</label><input type="radio" name="c20o" id="c20o5" value="5"><label for="c20o5">5</label></div></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="notes-block">
+      <label>Observations &amp; Discrepancy Notes — Preparedness</label>
+      <textarea placeholder="Document specific observations. Note any criteria where self and review scores differ by 2+ points."></textarea>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- SCORE SUMMARY -->
+  <div class="score-summary">
+    <div class="ss-header">
+      Score Summary
+      <div class="col-heads">
+        <span>Self</span>
+        <span>Ops Review</span>
+      </div>
+    </div>
+    <div class="ss-row"><span class="ss-row-label">① Cleanliness &amp; Sanitation</span><div class="ss-vals"><div class="ss-val self" id="sum-s1-self">—/25</div><div class="ss-val ops" id="sum-s1-ops">—/25</div></div></div>
+    <div class="ss-row"><span class="ss-row-label">② Organization &amp; Structure</span><div class="ss-vals"><div class="ss-val self" id="sum-s2-self">—/25</div><div class="ss-val ops" id="sum-s2-ops">—/25</div></div></div>
+    <div class="ss-row"><span class="ss-row-label">③ Daily Practices &amp; Standards</span><div class="ss-vals"><div class="ss-val self" id="sum-s3-self">—/25</div><div class="ss-val ops" id="sum-s3-ops">—/25</div></div></div>
+    <div class="ss-row"><span class="ss-row-label">④ Preparedness &amp; Team Readiness</span><div class="ss-vals"><div class="ss-val self" id="sum-s4-self">—/25</div><div class="ss-val ops" id="sum-s4-ops">—/25</div></div></div>
+    <div class="ss-total">
+      <span class="ss-total-label">Total Shop Score</span>
+      <div class="ss-total-vals">
+        <div class="ss-total-val self" id="total-self">—<small>/100</small></div>
+        <div class="ss-total-val ops"  id="total-ops">—<small>/100</small></div>
+      </div>
+    </div>
+    <div class="band-wrap">
+      <div class="band-track">
+        <div class="band-seg b1" id="bd1"></div>
+        <div class="band-seg b2" id="bd2"></div>
+        <div class="band-seg b3" id="bd3"></div>
+        <div class="band-seg b4" id="bd4"></div>
+        <div class="band-seg b5" id="bd5"></div>
+      </div>
+      <div class="band-text">
+        <span>0–39 · Below Standard</span>
+        <span>40–59 · Developing</span>
+        <span>60–74 · Meets Standard</span>
+        <span>75–89 · Proficient</span>
+        <span>90–100 · Exemplary</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTION PLAN -->
+  <div class="action-section">
+    <h3><div class="section-num" style="background:var(--mid);">↑</div> Action Plan &amp; Direction</h3>
+
+    <div class="action-block">
+      <div class="action-block-header">
+        <label>Priority Focus — This Period</label>
+        <span class="action-tag tag-team">Team</span>
+      </div>
+      <textarea placeholder="Identify the highest-priority area for improvement. State the specific standard expected and the target timeline for correction."></textarea>
+    </div>
+
+    <div class="action-block">
+      <div class="action-block-header">
+        <label>Areas of Strength — Sustain</label>
+        <span class="action-tag tag-team">Team</span>
+      </div>
+      <textarea placeholder="Identify criteria scoring 4–5. Document what is working well and what the team should continue doing consistently."></textarea>
+    </div>
+
+    <div class="action-block">
+      <div class="action-block-header">
+        <label>Individual Development Notes</label>
+        <span class="action-tag tag-personal">Individual</span>
+      </div>
+      <textarea style="min-height:68px;" placeholder="Note specific behavioral adjustments or skill gaps by role or initials. Observations should be based on directly witnessed conduct and discussed with individuals separately."></textarea>
+    </div>
+
+    <div class="action-block">
+      <div class="action-block-header">
+        <label>Focus for Next Audit</label>
+        <span class="action-tag tag-ops">Ops</span>
+      </div>
+      <textarea placeholder="Specify what will be observed and measured at the next review. Note any criteria to monitor for trend changes across locations."></textarea>
+    </div>
+  </div>
+
+  <!-- SIGN-OFF -->
+  <div class="ack">
+    <p>This audit record has been completed and reviewed. Both parties confirm that the scores and action plan reflect an accurate assessment of the location's performance for the period noted. Results will be shared with relevant team members and retained for operational records.</p>
+    <div class="sig-row">
+      <div class="sig-field">
+        <label>Coordinator Signature</label>
+        <div class="sig-line"></div>
+      </div>
+      <div class="sig-field">
+        <label>Ops Reviewer Signature</label>
+        <div class="sig-line"></div>
+      </div>
+      <div class="sig-field">
+        <label>Date Reviewed with Team</label>
+        <div class="sig-line"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-footer">
+    <span>Café Operations Audit · Confidential · Retain for Records</span>
+    <span>Bi-Weekly · v2.0</span>
+  </div>
+
+</div>
+
+<script>
+  const sections = {
+    s1: [['c1s','c1o'],['c2s','c2o'],['c3s','c3o'],['c4s','c4o'],['c5s','c5o']],
+    s2: [['c6s','c6o'],['c7s','c7o'],['c8s','c8o'],['c9s','c9o'],['c10s','c10o']],
+    s3: [['c11s','c11o'],['c12s','c12o'],['c13s','c13o'],['c14s','c14o'],['c15s','c15o']],
+    s4: [['c16s','c16o'],['c17s','c17o'],['c18s','c18o'],['c19s','c19o'],['c20s','c20o']]
+  };
+
+  function getVal(name) {
+    const el = document.querySelector(`input[name="${name}"]:checked`);
+    return el ? parseInt(el.value) : null;
+  }
+
+  function updateScores() {
+    let gSelf = 0, gOps = 0, gSR = 0, gOR = 0;
+
+    ['s1','s2','s3','s4'].forEach(key => {
+      let sS = 0, sO = 0, sSR = 0, sOR = 0;
+      sections[key].forEach(([sn, on]) => {
+        const sv = getVal(sn), ov = getVal(on);
+        if (sv !== null) { sS += sv; sSR++; }
+        if (ov !== null) { sO += ov; sOR++; }
+      });
+
+      document.getElementById(`${key}-self`).textContent = sSR > 0 ? `${sS}/25` : '—/25';
+      document.getElementById(`${key}-ops`).textContent  = sOR > 0 ? `${sO}/25` : '—/25';
+      document.getElementById(`sum-${key}-self`).textContent = sSR > 0 ? `${sS}/25` : '—/25';
+      document.getElementById(`sum-${key}-ops`).textContent  = sOR > 0 ? `${sO}/25` : '—/25';
+
+      gSelf += sS; gSR += sSR;
+      gOps  += sO; gOR  += sOR;
+    });
+
+    document.getElementById('total-self').innerHTML = gSR > 0 ? `${gSelf}<small>/100</small>` : `—<small>/100</small>`;
+    document.getElementById('total-ops').innerHTML  = gOR > 0 ? `${gOps}<small>/100</small>`  : `—<small>/100</small>`;
+    document.getElementById('hdr-self').innerHTML   = gSR > 0 ? `${gSelf} <small>/100</small>` : `— <small>/100</small>`;
+    document.getElementById('hdr-ops').innerHTML    = gOR > 0 ? `${gOps} <small>/100</small>`  : `— <small>/100</small>`;
+
+    // Performance band uses ops score if available, else self
+    const ref = gOR > 0 ? gOps : (gSR > 0 ? gSelf : null);
+    ['bd1','bd2','bd3','bd4','bd5'].forEach(id => document.getElementById(id).classList.remove('lit'));
+    if (ref !== null) {
+      if (ref >= 0)  document.getElementById('bd1').classList.add('lit');
+      if (ref >= 40) document.getElementById('bd2').classList.add('lit');
+      if (ref >= 60) document.getElementById('bd3').classList.add('lit');
+      if (ref >= 75) document.getElementById('bd4').classList.add('lit');
+      if (ref >= 90) document.getElementById('bd5').classList.add('lit');
+    }
+  }
+
+  document.querySelectorAll('input[type="radio"]').forEach(el => {
+    el.addEventListener('change', updateScores);
+  });
+</script>
+
+</body>
+</html>
