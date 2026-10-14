@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Café Spot Check</title>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Spot Check"/>
+<meta name="theme-color" content="#1a7a42"/>
+<link rel="apple-touch-icon" href="icon-spot.png"/>
+<link rel="manifest" href="manifest-spot.json"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #f5f5f3;
+    --white: #ffffff;
+    --ink: #1a1a1a;
+    --mid: #555550;
+    --light: #999990;
+    --border: #d8d8d4;
+    --border-dark: #b0b0aa;
+    --amber: #8a5a00;
+    --amber-bg: #fffbf0;
+    --amber-border: #e8c96a;
+    --amber-mid: #c49a1a;
+    --pass: #1a7a42;
+    --pass-bg: #f0fff4;
+    --pass-border: #a8d8b8;
+    --fail: #b82020;
+    --fail-bg: #fff4f4;
+    --fail-border: #f0b8b8;
+    --na: #888;
+    --na-bg: #f5f5f5;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+
+  .page {
+    max-width: 680px;
+    margin: 0 auto;
+    background: var(--white);
+    min-height: 100vh;
+    padding: 40px 48px 52px;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+
+  /* HEADER */
+  .form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .header-left .eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--light);
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+
+  .header-left h1 {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 20px;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+  }
+
+  .header-right {
+    text-align: right;
+  }
+
+  .spot-badge {
+    display: inline-block;
+    background: var(--amber-bg);
+    border: 1px solid var(--amber-border);
+    color: var(--amber);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 3px;
+    margin-bottom: 6px;
+  }
+
+  .result-display {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 15px;
+    color: var(--light);
+    text-align: right;
+  }
+
+  .result-display span {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 3px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+
+  .result-display span.pass { background: var(--pass-bg); color: var(--pass); border: 1px solid var(--pass-border); }
+  .result-display span.fail { background: var(--fail-bg); color: var(--fail); border: 1px solid var(--fail-border); }
+  .result-display span.pending { background: var(--na-bg); color: var(--light); border: 1px solid var(--border); }
+
+  /* META */
+  .meta-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .meta-field label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--light);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .meta-field input, .meta-field select {
+    width: 100%;
+    border: none;
+    border-bottom: 1.5px solid var(--border-dark);
+    background: transparent;
+    padding: 4px 0;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .meta-field input:focus, .meta-field select:focus { border-bottom-color: var(--ink); }
+
+  /* INSTRUCTIONS */
+  .instructions {
+    background: var(--amber-bg);
+    border: 1px solid var(--amber-border);
+    border-radius: 3px;
+    padding: 11px 14px;
+    margin-bottom: 24px;
+    font-size: 11.5px;
+    color: var(--amber);
+    line-height: 1.65;
+  }
+
+  .instructions strong { color: var(--amber); }
+
+  /* CHECK ITEM */
+  .check-item {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+
+  .check-item.is-pass { border-color: var(--pass-border); }
+  .check-item.is-fail { border-color: var(--fail-border); }
+
+  .check-body {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    padding: 14px 16px;
+    align-items: center;
+    background: white;
+  }
+
+  .check-label {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+
+  .check-hint {
+    font-size: 11px;
+    color: var(--light);
+  }
+
+  .check-controls {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .check-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    border-radius: 3px;
+    border: 1.5px solid var(--border-dark);
+    background: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--light);
+    transition: all 0.12s;
+    letter-spacing: 0.04em;
+  }
+
+  .check-btn:hover { border-color: var(--ink); color: var(--ink); }
+
+  .check-btn.pass-btn.active { background: var(--pass-bg); border-color: var(--pass); color: var(--pass); }
+  .check-btn.fail-btn.active { background: var(--fail-bg); border-color: var(--fail); color: var(--fail); }
+
+  .check-note {
+    padding: 0 16px 12px;
+    background: white;
+    display: none;
+  }
+
+  .check-note.visible { display: block; }
+
+  .check-note textarea {
+    width: 100%;
+    border: 1px solid var(--border-dark);
+    border-radius: 3px;
+    background: #fafafa;
+    padding: 7px 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    color: var(--ink);
+    outline: none;
+    resize: vertical;
+    min-height: 40px;
+    line-height: 1.6;
+    transition: border-color 0.15s;
+  }
+
+  .check-note textarea:focus { border-color: var(--ink); background: white; }
+
+  .check-note label {
+    display: block;
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--light);
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+
+  /* FAIL INDICATOR */
+  .check-item.is-fail .check-body { background: var(--fail-bg); }
+  .check-item.is-fail .check-note { background: var(--fail-bg); }
+  .check-item.is-pass .check-body { background: var(--pass-bg); }
+
+  /* GROUP LABEL */
+  .group-label {
+    font-size: 10px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--light);
+    font-weight: 600;
+    margin: 20px 0 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .group-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* RESULT SUMMARY */
+  .result-summary {
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    margin: 24px 0 20px;
+    overflow: hidden;
+  }
+
+  .rs-header {
+    background: var(--ink);
+    color: white;
+    padding: 9px 16px;
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .rs-body {
+    padding: 14px 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+
+  .rs-stat {
+    text-align: center;
+    padding: 10px 0;
+    border-radius: 3px;
+  }
+
+  .rs-stat.pass-stat { background: var(--pass-bg); border: 1px solid var(--pass-border); }
+  .rs-stat.fail-stat { background: var(--fail-bg); border: 1px solid var(--fail-border); }
+  .rs-stat.pend-stat { background: var(--na-bg); border: 1px solid var(--border); }
+
+  .rs-num {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 26px;
+    line-height: 1;
+    margin-bottom: 3px;
+  }
+
+  .pass-stat .rs-num { color: var(--pass); }
+  .fail-stat .rs-num { color: var(--fail); }
+  .pend-stat .rs-num { color: var(--light); }
+
+  .rs-label {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .pass-stat .rs-label { color: var(--pass); }
+  .fail-stat .rs-label { color: var(--fail); }
+  .pend-stat .rs-label { color: var(--light); }
+
+  .rs-overall {
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fafafa;
+  }
+
+  .rs-overall-label {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .rs-overall-val {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 18px;
+    padding: 4px 16px;
+    border-radius: 3px;
+  }
+
+  .rs-overall-val.pass { background: var(--pass-bg); color: var(--pass); border: 1px solid var(--pass-border); }
+  .rs-overall-val.fail { background: var(--fail-bg); color: var(--fail); border: 1px solid var(--fail-border); }
+  .rs-overall-val.pending { background: var(--na-bg); color: var(--light); border: 1px solid var(--border); font-family: 'DM Sans', sans-serif; font-size: 12px; }
+
+  /* FOLLOW-UP */
+  .followup {
+    margin-bottom: 20px;
+  }
+
+  .followup label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--light);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .followup textarea {
+    width: 100%;
+    border: 1px solid var(--border-dark);
+    border-radius: 3px;
+    background: #fafafa;
+    padding: 9px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12.5px;
+    color: var(--ink);
+    outline: none;
+    resize: vertical;
+    min-height: 56px;
+    line-height: 1.6;
+    transition: border-color 0.15s;
+  }
+
+  .followup textarea:focus { border-color: var(--ink); background: white; }
+
+  /* SIGN-OFF */
+  .sign-off {
+    border: 1px solid var(--border-dark);
+    border-radius: 3px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+
+  .sign-off p {
+    font-size: 11px;
+    color: var(--mid);
+    margin-bottom: 14px;
+    line-height: 1.7;
+  }
+
+  .sig-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .sig-field label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--light);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .sig-line { border-bottom: 1.5px solid var(--ink); height: 26px; }
+
+  .form-footer {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+    margin-top: 20px;
+  }
+
+  .form-footer span { font-size: 10px; color: var(--light); letter-spacing: 0.06em; }
+
+  @media print {
+    body { background: white; }
+    .page { border: none; padding: 28px 36px; }
+    .print-btn-bar { display: none !important; }
+  }
+</style>
+</head>
+<body>
+<div id="pwa-banner" style="display:none;background:#1a7a42;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;padding:12px 16px;text-align:center;line-height:1.5;">
+  <strong>Add to iPhone home screen:</strong> tap the Share icon <span style="font-size:15px">⎋</span> → <em>Add to Home Screen</em> → <em>Add</em>
+  <button onclick="document.getElementById('pwa-banner').style.display='none'" style="margin-left:12px;background:rgba(255,255,255,0.25);border:none;color:#fff;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:12px;">✕</button>
+</div>
+<script>
+  if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone) {
+    document.getElementById('pwa-banner').style.display = 'block';
+  }
+</script>
+
+<div class="print-btn-bar" style="
+  position: fixed; bottom: 28px; right: 28px; z-index: 1000;
+">
+  <button onclick="window.print()" style="
+    display: flex; align-items: center; gap: 8px;
+    background: #1a1a1a; color: white;
+    border: none; border-radius: 4px;
+    padding: 11px 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; letter-spacing: 0.03em;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+    transition: background 0.15s;
+  " onmouseover="this.style.background='#333'" onmouseout="this.style.background='#1a1a1a'">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    Print / Save as PDF
+  </button>
+</div>
+
+<div class="page">
+
+  <div class="form-header">
+    <div class="header-left">
+      <div class="eyebrow">Café Operations</div>
+      <h1>Spot Check</h1>
+    </div>
+    <div class="header-right">
+      <div class="spot-badge">Unannounced / As Needed</div>
+      <div class="result-display" id="overall-display">
+        <span class="pending" id="overall-badge">Not yet complete</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="meta-row">
+    <div class="meta-field">
+      <label>Location</label>
+      <select>
+        <option value="">Select…</option>
+        <option>Fable</option>
+        <option>Seasmith</option>
+        <option>Burien Press</option>
+        <option>Moonshot Coffee</option>
+        <option>Production Kitchen</option>
+      </select>
+    </div>
+    <div class="meta-field">
+      <label>Date &amp; Time</label>
+      <input type="datetime-local"/>
+    </div>
+    <div class="meta-field">
+      <label>Reviewer</label>
+      <input type="text" placeholder="Full name"/>
+    </div>
+    <div class="meta-field">
+      <label>Coordinator / Staff on Duty</label>
+      <input type="text" placeholder="Name(s)"/>
+    </div>
+  </div>
+
+  <div class="instructions">
+    <strong>Instructions:</strong> Mark each item Pass or Fail based on direct observation at the time of the visit. Add a note for any Fail result — be specific about what was observed. A single Fail does not constitute an overall failure; use the summary and follow-up field to determine whether escalation or follow-through is required.
+  </div>
+
+  <!-- GROUP: OPENING & READINESS -->
+  <div class="group-label">Opening &amp; Readiness</div>
+
+  <div class="check-item" id="item-opening">
+    <div class="check-body">
+      <div>
+        <div class="check-label">Opening Readiness</div>
+        <div class="check-hint">Shop fully prepared before service begins; no unresolved tasks at open; mise en place in position</div>
+      </div>
+      <div class="check-controls">
+        <button class="check-btn pass-btn" onclick="setCheck('opening','pass')">✓ Pass</button>
+        <button class="check-btn fail-btn" onclick="setCheck('opening','fail')">✗ Fail</button>
+      </div>
+    </div>
+    <div class="check-note" id="note-opening">
+      <label>Observation — what specifically was not ready?</label>
+      <textarea placeholder="e.g. Bar not stocked at open, grinder not dialed in, one station missing mise en place…"></textarea>
+    </div>
+  </div>
+
+  <!-- GROUP: SERVICE & PRODUCT -->
+  <div class="group-label">Service &amp; Product</div>
+
+  <div class="check-item" id="item-recipe">
+    <div class="check-body">
+      <div>
+        <div class="check-label">Recipe Adherence &amp; Consistency</div>
+        <div class="check-hint">Beverages prepared to standard; correct ratios, temperatures, and techniques observed</div>
+      </div>
+      <div class="check-controls">
+        <button class="check-btn pass-btn" onclick="setCheck('recipe','pass')">✓ Pass</button>
+        <button class="check-btn fail-btn" onclick="setCheck('recipe','fail')">✗ Fail</button>
+      </div>
+    </div>
+    <div class="check-note" id="note-recipe">
+      <label>Observation — which drinks, which deviations?</label>
+      <textarea placeholder="e.g. Latte pulled short, milk temperature inconsistent across two drinks, incorrect pour ratio observed…"></textarea>
+    </div>
+  </div>
+
+  <div class="check-item" id="item-speed">
+    <div class="check-body">
+      <div>
+        <div class="check-label">Speed &amp; Efficiency Under Service</div>
+        <div class="check-hint">Tickets moving without unnecessary delays; no bottlenecks; team communicating effectively</div>
+      </div>
+      <div class="check-controls">
+        <button class="check-btn pass-btn" onclick="setCheck('speed','pass')">✓ Pass</button>
+        <button class="check-btn fail-btn" onclick="setCheck('speed','fail')">✗ Fail</button>
+      </div>
+    </div>
+    <div class="check-note" id="note-speed">
+      <label>Observation — describe the bottleneck or breakdown</label>
+      <textarea placeholder="e.g. Queue backed up 8+ tickets during moderate volume, no verbal communication between bar and register…"></textarea>
+    </div>
+  </div>
+
+  <!-- GROUP: HYGIENE -->
+  <div class="group-label">Hygiene</div>
+
+  <div class="check-item" id="item-hygiene">
+    <div class="check-body">
+      <div>
+        <div class="check-label">Handwashing &amp; Glove Use</div>
+        <div class="check-hint">Staff observed washing hands at appropriate intervals; gloves worn correctly when required</div>
+      </div>
+      <div class="check-controls">
+        <button class="check-btn pass-btn" onclick="setCheck('hygiene','pass')">✓ Pass</button>
+        <button class="check-btn fail-btn" onclick="setCheck('hygiene','fail')">✗ Fail</button>
+      </div>
+    </div>
+    <div class="check-note" id="note-hygiene">
+      <label>Observation — what was observed and when?</label>
+      <textarea placeholder="e.g. Staff member handled cash then prepared food without washing hands, gloves not changed after break…"></textarea>
+    </div>
+  </div>
+
+  <!-- RESULT SUMMARY -->
+  <div class="result-summary">
+    <div class="rs-header">
+      Result Summary
+      <span id="rs-timestamp" style="font-weight:400;opacity:0.6;font-size:10px;letter-spacing:0.06em;"></span>
+    </div>
+    <div class="rs-body">
+      <div class="rs-stat pass-stat">
+        <div class="rs-num" id="rs-pass">—</div>
+        <div class="rs-label">Pass</div>
+      </div>
+      <div class="rs-stat fail-stat">
+        <div class="rs-num" id="rs-fail">—</div>
+        <div class="rs-label">Fail</div>
+      </div>
+      <div class="rs-stat pend-stat">
+        <div class="rs-num" id="rs-pend">4</div>
+        <div class="rs-label">Pending</div>
+      </div>
+    </div>
+    <div class="rs-overall">
+      <span class="rs-overall-label">Overall Result</span>
+      <span class="rs-overall-val pending" id="rs-overall">Incomplete</span>
+    </div>
+  </div>
+
+  <!-- FOLLOW-UP -->
+  <div class="followup">
+    <label>Follow-Up Required</label>
+    <textarea placeholder="Document any items requiring follow-up action, escalation, or monitoring at the next visit. Reference specific items by name."></textarea>
+  </div>
+
+  <div class="followup">
+    <label>Positive Observations</label>
+    <textarea placeholder="Note anything observed that meets or exceeds standard and should be acknowledged."></textarea>
+  </div>
+
+  <!-- SIGN-OFF -->
+  <div class="sign-off">
+    <p>This spot check was conducted unannounced and reflects conditions observed at the time of the visit. A copy should be left with the coordinator on duty. Fail items require documented follow-up within 48 hours.</p>
+    <div class="sig-row">
+      <div class="sig-field">
+        <label>Reviewer Signature</label>
+        <div class="sig-line"></div>
+      </div>
+      <div class="sig-field">
+        <label>Coordinator / Staff Notified</label>
+        <div class="sig-line"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-footer">
+    <span>Café Operations Spot Check · Confidential · Leave copy with MOD</span>
+    <span>v1.0</span>
+  </div>
+
+</div>
+
+<script>
+  const state = {};
+  const items = ['opening', 'recipe', 'speed', 'hygiene'];
+
+  function setCheck(id, result) {
+    state[id] = result;
+
+    const item = document.getElementById(`item-${id}`);
+    const note = document.getElementById(`note-${id}`);
+    const passBtn = item.querySelector('.pass-btn');
+    const failBtn = item.querySelector('.fail-btn');
+
+    item.classList.remove('is-pass','is-fail');
+    passBtn.classList.remove('active');
+    failBtn.classList.remove('active');
+
+    if (result === 'pass') {
+      item.classList.add('is-pass');
+      passBtn.classList.add('active');
+      note.classList.remove('visible');
+    } else {
+      item.classList.add('is-fail');
+      failBtn.classList.add('active');
+      note.classList.add('visible');
+    }
+
+    updateSummary();
+  }
+
+  function updateSummary() {
+    const rated = items.filter(id => state[id]);
+    const passed = items.filter(id => state[id] === 'pass');
+    const failed = items.filter(id => state[id] === 'fail');
+    const pending = items.length - rated.length;
+
+    document.getElementById('rs-pass').textContent = passed.length || '—';
+    document.getElementById('rs-fail').textContent = failed.length || '—';
+    document.getElementById('rs-pend').textContent = pending || '—';
+
+    const overall = document.getElementById('rs-overall');
+    const badge = document.getElementById('overall-badge');
+
+    if (rated.length === items.length) {
+      if (failed.length === 0) {
+        overall.textContent = 'All Pass';
+        overall.className = 'rs-overall-val pass';
+        badge.textContent = 'All Pass';
+        badge.className = 'pass';
+      } else {
+        overall.textContent = `${failed.length} Item${failed.length > 1 ? 's' : ''} Failed`;
+        overall.className = 'rs-overall-val fail';
+        badge.textContent = `${failed.length} Failed`;
+        badge.className = 'fail';
+      }
+      const now = new Date();
+      document.getElementById('rs-timestamp').textContent = 
+        now.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) + ' · ' +
+        now.toLocaleDateString([], {month: 'short', day: 'numeric'});
+    } else {
+      overall.textContent = 'Incomplete';
+      overall.className = 'rs-overall-val pending';
+      badge.textContent = `${rated.length} of ${items.length} rated`;
+      badge.className = 'pending';
+    }
+  }
+</script>
+
+</body>
+</html>

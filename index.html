@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Café Forms</title>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Café Forms"/>
+<meta name="theme-color" content="#1a1a1a"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f5f5f3;
+    --ink: #1a1a1a;
+    --mid: #555550;
+    --light: #999990;
+    --border: #d8d8d4;
+    --audit: #2a4ccc;
+    --spot: #1a7a42;
+  }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: env(safe-area-inset-top, 0) 0 env(safe-area-inset-bottom, 0);
+  }
+  header {
+    width: 100%;
+    text-align: center;
+    padding: 52px 24px 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 {
+    font-family: 'Libre Baskerville', serif;
+    font-size: clamp(22px, 5vw, 30px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  header p {
+    margin-top: 8px;
+    color: var(--mid);
+    font-size: 14px;
+    font-weight: 400;
+  }
+  .cards {
+    width: 100%;
+    max-width: 480px;
+    padding: 32px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .card {
+    display: block;
+    text-decoration: none;
+    border-radius: 12px;
+    padding: 28px 24px;
+    color: #fff;
+    transition: opacity 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .card:active { opacity: 0.85; }
+  .card.audit { background: var(--audit); }
+  .card.spot  { background: var(--spot); }
+  .card-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    margin-bottom: 8px;
+  }
+  .card h2 {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+  .card p {
+    font-size: 13px;
+    opacity: 0.85;
+    line-height: 1.5;
+    max-width: 32ch;
+  }
+  .card-arrow {
+    position: absolute;
+    right: 22px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 22px;
+    opacity: 0.6;
+  }
+  .instructions {
+    width: 100%;
+    max-width: 480px;
+    padding: 0 20px 48px;
+  }
+  .instructions h3 {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    color: var(--ink);
+  }
+  .step {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+  .step-num {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+  }
+  .step p {
+    font-size: 14px;
+    color: var(--mid);
+    line-height: 1.5;
+  }
+  .step p strong { color: var(--ink); }
+  .step p em {
+    font-style: normal;
+    background: rgba(0,0,0,0.06);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 13px;
+  }
+  footer {
+    margin-top: auto;
+    padding: 0 20px 32px;
+    text-align: center;
+    color: var(--light);
+    font-size: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #1a1a1a; --ink: #f0f0ee; --mid: #aaa; --light: #666; --border: #333; }
+    .step-num { background: #f0f0ee; color: #1a1a1a; }
+    .step p em { background: rgba(255,255,255,0.1); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Café Operations</h1>
+  <p>Select a form to begin</p>
+</header>
+
+<div class="cards">
+  <a href="cafe-audit.html" class="card audit">
+    <div class="card-eyebrow">Bi-weekly</div>
+    <h2>Performance Audit</h2>
+    <p>Full scoring across cleanliness, organization, mise en place, and preparedness.</p>
+    <span class="card-arrow">›</span>
+  </a>
+
+  <a href="cafe-spot-check.html" class="card spot">
+    <div class="card-eyebrow">Unannounced</div>
+    <h2>Spot Check</h2>
+    <p>Quick pass/fail review of opening readiness, recipe adherence, service, and hygiene.</p>
+    <span class="card-arrow">›</span>
+  </a>
+</div>
+
+<div class="instructions" id="ios-instructions" style="display:none;">
+  <h3>Add to your iPhone home screen</h3>
+  <div class="step">
+    <div class="step-num">1</div>
+    <p>Tap the <strong>Share</strong> button <em>⎋</em> at the bottom of Safari</p>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <p>Scroll down and tap <em>Add to Home Screen</em></p>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <p>Tap <em>Add</em> in the top right — the app icon will appear on your home screen</p>
+  </div>
+  <div class="step">
+    <div class="step-num">4</div>
+    <p>Open from home screen and <strong>share this same URL</strong> with your team so they can do the same</p>
+  </div>
+</div>
+
+<footer>
+  Fable · Seasmith · Burien Press · Moonshot Coffee · Production Kitchen
+</footer>
+
+<script>
+  if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone) {
+    document.getElementById('ios-instructions').style.display = 'block';
+  }
+</script>
+</body>
+</html>
